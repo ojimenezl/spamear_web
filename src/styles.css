@@ -1,0 +1,138 @@
+:root {
+  /* Dark neutral (sin tinte verde) + rojo marca */
+  --red: #e35d5a;
+  --red-deep: #c41e1a;
+  --red-soft: rgba(227, 93, 90, 0.14);
+  --bg: #121212;
+  --bg-2: #171717;
+  --surface: #1e1e1e;
+  --surface-2: #2a2a2a;
+  --cream: #171717;
+  --cream-soft: #1e1e1e;
+  --black: #ececec;
+  --ink: #cfcfcf;
+  --muted: #8a8a8a;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  --font: 'Barlow', system-ui, sans-serif;
+  --display: 'Barlow Condensed', 'Barlow', sans-serif;
+  --radius: 0.45rem;
+
+  /* Tamaños REALES de banners en la home (preview = misma medida) */
+  --page-pad-y: 0.9rem;
+  --page-pad-x: 1.2rem;
+  --page-gap: 0.7rem;
+  --banner-edge-w: 96px;
+  --banner-edge-gap: 0.5rem;
+  --banner-tall-h: calc((100dvh - var(--page-pad-y) - var(--banner-edge-gap) * 2) / 3);
+  --banner-foot-h: 84px;
+  --banner-mini-w: 88px;
+  --top10-w: 182px;
+  /* 1/4 del muro: viewport − laterales − gaps − top10 − padding */
+  --banner-foot-w: clamp(
+    120px,
+    calc(
+      (min(1480px, 100vw) - var(--banner-edge-w) * 2 - var(--page-gap) * 2 -
+        var(--page-pad-x) - var(--top10-w) - 0.7rem) / 4
+    ),
+    320px
+  );
+  /* Card del muro = preview del formulario (misma caja) */
+  --card-w: 170px;
+  --card-h: 170px;
+  --card-photo-h: 96px;
+  --banner-card-w: var(--card-w);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(900px 420px at 12% -8%, rgba(196, 30, 26, 0.08), transparent 52%),
+    linear-gradient(180deg, #161616 0%, var(--bg) 100%);
+  color: var(--black);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  color-scheme: dark;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+a {
+  color: var(--red);
+  text-decoration: none;
+}
+
+a:hover {
+  color: #f0a09e;
+}
+
+#app {
+  height: 100%;
+  overflow: hidden;
+}
+
+@media (max-width: 979px) {
+  html {
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    height: auto;
+    overflow-y: auto;
+  }
+
+  html,
+  body,
+  #app {
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+  }
+
+  body,
+  #app {
+    overflow-y: visible;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+::selection {
+  background: rgba(227, 93, 90, 0.35);
+  color: #fff;
+}
+
+input,
+textarea,
+select {
+  color-scheme: dark;
+}
