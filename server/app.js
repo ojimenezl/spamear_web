@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import jwt from 'jsonwebtoken'
-import { connectDb } from './db.js'
+import { connectDb, mongoEnvInfo } from './db.js'
 import {
   User,
   Spam,
@@ -55,28 +55,44 @@ import { postWallSnapshot } from './twitter.js'
 import { BANNER_SLOTS, BANNER_SLOT_KEYS } from './bannerSlots.js'
 
 let useMemory = false
+let storeInitError = null
 
 async function initStore() {
+  const isProd = Boolean(process.env.VERCEL) || process.env.NODE_ENV === 'production'
+  storeInitError = null
   try {
     const conn = await connectDb()
     if (!conn) {
+      if (isProd) {
+        throw new Error('MONGODB_URI missing or empty in production')
+      }
       useMemory = true
       console.log('[spamear] Running with in-memory store (set MONGODB_URI for Atlas)')
-    } else {
-      useMemory = false
-      await ensureTopSlots()
-      for (const slotKey of BANNER_SLOT_KEYS) {
-        await BannerSlot().updateOne(
-          { slotKey },
-          { $setOnInsert: { slotKey } },
-          { upsert: true }
-        )
-      }
-      console.log('[spamear] Connected to MongoDB')
+      return
     }
+    useMemory = false
+    await ensureTopSlots()
+    for (const slotKey of BANNER_SLOT_KEYS) {
+      await BannerSlot().updateOne(
+        { slotKey },
+        { $setOnInsert: { slotKey } },
+        { upsert: true }
+      )
+    }
+    console.log('[spamear] Connected to MongoDB')
   } catch (e) {
+    storeInitError = e.message || String(e)
+    console.error('[spamear] Mongo init failed:', storeInitError)
+    // En Vercel/producción NO caemos a memoria en silencio: la API falla al arrancar.
+    // (Si quieres ver el motivo sin tumbar todo, mira /api/health tras un deploy con este código.)
+    if (isProd) {
+      // Seguimos en memoria SOLO para que /api/health pueda explicar el fallo;
+      // el resto de rutas también verán store=memory hasta que Mongo funcione.
+      useMemory = true
+      return
+    }
     useMemory = true
-    console.warn('[spamear] Mongo failed, memory store:', e.message)
+    console.warn('[spamear] Mongo failed, memory store:', storeInitError)
   }
 }
 
@@ -241,7 +257,13 @@ export async function createApp() {
   app.use(express.json({ limit: '1mb' }))
 
   app.get('/api/health', (_req, res) => {
-    res.json({ ok: true, store: useMemory ? 'memory' : 'mongo' })
+    res.json({
+      ok: true,
+      store: useMemory ? 'memory' : 'mongo',
+      mongo: mongoEnvInfo(),
+      storeInitError: storeInitError || null,
+      vercel: Boolean(process.env.VERCEL),
+    })
   })
 
   app.get('/api/config', (_req, res) => {
